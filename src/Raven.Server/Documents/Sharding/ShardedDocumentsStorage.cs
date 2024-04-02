@@ -357,8 +357,15 @@ public sealed unsafe class ShardedDocumentsStorage : DocumentsStorage
                 result = ShardedDocumentDatabase.DeleteBucketCommand.DeleteBucketResult.Skipped;
                 continue;
             }
-            
-            Delete(context, document.Id, flags: DocumentFlags.Artificial | DocumentFlags.FromResharding);
+
+            try
+            {
+                Delete(context, document.Id, flags: DocumentFlags.Artificial | DocumentFlags.FromResharding);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException($"Failed to delete document '{document.Id}'", e);
+            }
 
             // delete revisions for document
             RevisionsStorage.ForceDeleteAllRevisionsFor(context, document.Id);
